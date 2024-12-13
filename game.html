@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Car Racing Game</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            display: block;
+            margin: 0 auto;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script>
+        // Constants
+        const WIDTH = 800;
+        const HEIGHT = 600;
+        const WHITE = "#FFFFFF";
+        const BLACK = "#000000";
+        const RED = "#FF0000";
+
+        // Get canvas context
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Player car class
+        class PlayerCar {
+            constructor() {
+                this.width = 50;
+                this.height = 80;
+                this.x = WIDTH / 2 - this.width / 2;
+                this.y = HEIGHT - this.height - 20;
+                this.speed = 5;
+                this.color = RED;
+            }
+
+            move() {
+                if (keys.ArrowLeft && this.x > 0) {
+                    this.x -= this.speed;
+                }
+                if (keys.ArrowRight && this.x < WIDTH - this.width) {
+                    this.x += this.speed;
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+        // Enemy car class
+        class EnemyCar {
+            constructor() {
+                this.width = 50;
+                this.height = 80;
+                this.x = Math.random() * (WIDTH - this.width);
+                this.y = -this.height;
+                this.speed = 3;
+                this.color = BLACK;
+            }
+
+            move() {
+                this.y += this.speed;
+                if (this.y > HEIGHT) {
+                    this.y = -this.height;
+                    this.x = Math.random() * (WIDTH - this.width);
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+        // Game setup
+        const player = new PlayerCar();
+        const enemies = Array(3).fill().map(() => new EnemyCar());
+        let score = 0;
+        let gameOver = false;
+        const baseSpeed = 3;
+        const speedIncreaseInterval = 1000;
+
+        // Keyboard handling
+        const keys = {};
+        document.addEventListener('keydown', (e) => keys[e.key] = true);
+        document.addEventListener('keyup', (e) => keys[e.key] = false);
+
+        // Game loop
+        function gameLoop() {
+            if (!gameOver) {
+                // Update speed based on score
+                const currentSpeed = baseSpeed + Math.floor(score / speedIncreaseInterval);
+                enemies.forEach(enemy => enemy.speed = currentSpeed);
+
+                // Update
+                player.move();
+                enemies.forEach(enemy => {
+                    enemy.move();
+                    // Collision detection
+                    if (player.x < enemy.x + enemy.width &&
+                        player.x + player.width > enemy.x &&
+                        player.y < enemy.y + enemy.height &&
+                        player.y + player.height > enemy.y) {
+                        gameOver = true;
+                    }
+                });
+
+                score++;
+
+                // Draw
+                ctx.fillStyle = WHITE;
+                ctx.fillRect(0, 0, WIDTH, HEIGHT);
+                player.draw();
+                enemies.forEach(enemy => enemy.draw());
+
+                // Display score
+                ctx.fillStyle = BLACK;
+                ctx.font = "36px Arial";
+                ctx.fillText(`Score: ${score}`, 10, 40);
+            } else {
+                // Game over screen
+                ctx.fillStyle = BLACK;
+                ctx.font = "74px Arial";
+                const gameOverText = "Game Over";
+                const textWidth = ctx.measureText(gameOverText).width;
+                ctx.fillText(gameOverText, WIDTH/2 - textWidth/2, HEIGHT/2);
+                
+                ctx.font = "36px Arial";
+                const scoreText = `Final Score: ${score}`;
+                const scoreWidth = ctx.measureText(scoreText).width;
+                ctx.fillText(scoreText, WIDTH/2 - scoreWidth/2, HEIGHT/2 + 50);
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start the game
+        gameLoop();
+    </script>
+</body>
+</html>
