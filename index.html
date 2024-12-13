@@ -1,152 +1,173 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Car Racing Game</title>
+    <title>Registration Form</title>
     <style>
-        canvas {
-            border: 1px solid black;
-            display: block;
-            margin: 0 auto;
-        }
         body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .error {
+            color: red;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
         }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div class="container">
+        <h2>Registration Form</h2>
+        <form id="registrationForm" onsubmit="return validateForm()">
+            <div class="form-group">
+                <label for="fullname">Full Name</label>
+                <input type="text" id="fullname" name="fullname" required>
+                <div class="error" id="nameError">Please enter a valid name</div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+                <div class="error" id="emailError">Please enter a valid email</div>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" required>
+                <div class="error" id="phoneError">Please enter a valid phone number</div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+                <div class="error" id="passwordError">Password must be at least 8 characters</div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required>
+                <div class="error" id="confirmError">Passwords do not match</div>
+            </div>
+
+            <button type="submit">Register</button>
+        </form>
+    </div>
+
     <script>
-        // Constants
-        const WIDTH = 800;
-        const HEIGHT = 600;
-        const WHITE = "#FFFFFF";
-        const BLACK = "#000000";
-        const RED = "#FF0000";
+        function validateForm() {
+            let isValid = true;
+            const nameRegex = /^[a-zA-Z\s]{2,30}$/;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const phoneRegex = /^\d{10}$/;
 
-        // Get canvas context
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-
-        // Player car class
-        class PlayerCar {
-            constructor() {
-                this.width = 50;
-                this.height = 80;
-                this.x = WIDTH / 2 - this.width / 2;
-                this.y = HEIGHT - this.height - 20;
-                this.speed = 5;
-                this.color = RED;
-            }
-
-            move() {
-                if (keys.ArrowLeft && this.x > 0) {
-                    this.x -= this.speed;
-                }
-                if (keys.ArrowRight && this.x < WIDTH - this.width) {
-                    this.x += this.speed;
-                }
-            }
-
-            draw() {
-                ctx.fillStyle = this.color;
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-            }
-        }
-
-        // Enemy car class
-        class EnemyCar {
-            constructor() {
-                this.width = 50;
-                this.height = 80;
-                this.x = Math.random() * (WIDTH - this.width);
-                this.y = -this.height;
-                this.speed = 3;
-                this.color = BLACK;
-            }
-
-            move() {
-                this.y += this.speed;
-                if (this.y > HEIGHT) {
-                    this.y = -this.height;
-                    this.x = Math.random() * (WIDTH - this.width);
-                }
-            }
-
-            draw() {
-                ctx.fillStyle = this.color;
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-            }
-        }
-
-        // Game setup
-        const player = new PlayerCar();
-        const enemies = Array(3).fill().map(() => new EnemyCar());
-        let score = 0;
-        let gameOver = false;
-        const baseSpeed = 3;
-        const speedIncreaseInterval = 1000;
-
-        // Keyboard handling
-        const keys = {};
-        document.addEventListener('keydown', (e) => keys[e.key] = true);
-        document.addEventListener('keyup', (e) => keys[e.key] = false);
-
-        // Game loop
-        function gameLoop() {
-            if (!gameOver) {
-                // Update speed based on score
-                const currentSpeed = baseSpeed + Math.floor(score / speedIncreaseInterval);
-                enemies.forEach(enemy => enemy.speed = currentSpeed);
-
-                // Update
-                player.move();
-                enemies.forEach(enemy => {
-                    enemy.move();
-                    // Collision detection
-                    if (player.x < enemy.x + enemy.width &&
-                        player.x + player.width > enemy.x &&
-                        player.y < enemy.y + enemy.height &&
-                        player.y + player.height > enemy.y) {
-                        gameOver = true;
-                    }
-                });
-
-                score++;
-
-                // Draw
-                ctx.fillStyle = WHITE;
-                ctx.fillRect(0, 0, WIDTH, HEIGHT);
-                player.draw();
-                enemies.forEach(enemy => enemy.draw());
-
-                // Display score
-                ctx.fillStyle = BLACK;
-                ctx.font = "36px Arial";
-                ctx.fillText(`Score: ${score}`, 10, 40);
+            // Validate name
+            const name = document.getElementById('fullname').value;
+            if (!nameRegex.test(name)) {
+                document.getElementById('nameError').style.display = 'block';
+                isValid = false;
             } else {
-                // Game over screen
-                ctx.fillStyle = BLACK;
-                ctx.font = "74px Arial";
-                const gameOverText = "Game Over";
-                const textWidth = ctx.measureText(gameOverText).width;
-                ctx.fillText(gameOverText, WIDTH/2 - textWidth/2, HEIGHT/2);
-                
-                ctx.font = "36px Arial";
-                const scoreText = `Final Score: ${score}`;
-                const scoreWidth = ctx.measureText(scoreText).width;
-                ctx.fillText(scoreText, WIDTH/2 - scoreWidth/2, HEIGHT/2 + 50);
+                document.getElementById('nameError').style.display = 'none';
             }
 
-            requestAnimationFrame(gameLoop);
-        }
+            // Validate email
+            const email = document.getElementById('email').value;
+            if (!emailRegex.test(email)) {
+                document.getElementById('emailError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('emailError').style.display = 'none';
+            }
 
-        // Start the game
-        gameLoop();
+            // Validate phone
+            const phone = document.getElementById('phone').value;
+            if (!phoneRegex.test(phone)) {
+                document.getElementById('phoneError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('phoneError').style.display = 'none';
+            }
+
+            // Validate password
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password.length < 8) {
+                document.getElementById('passwordError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('passwordError').style.display = 'none';
+            }
+
+            if (password !== confirmPassword) {
+                document.getElementById('confirmError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('confirmError').style.display = 'none';
+            }
+
+            if (isValid) {
+                alert('Registration successful!');
+            }
+
+            return isValid;
+        }
     </script>
 </body>
 </html>
